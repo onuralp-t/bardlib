@@ -1,0 +1,8 @@
+CompileFlags:
+  Add:
+    - -xc
+    - -std=c23
+Completion:
+  HeaderInsertion: Never
+Diagnostics:
+  UnusedIncludes: None

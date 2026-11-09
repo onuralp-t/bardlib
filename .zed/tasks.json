@@ -1,0 +1,18 @@
+[
+  {
+    "label": "Build",
+    "command": "cmd",
+    "args": ["/c", "build.bat"],
+    "use_new_terminal": false,
+    "reveal": "no_focus",
+    "hide": "on_success"
+  },
+  {
+    "label": "Clean",
+    "command": "cmd",
+    "args": ["/c", "build.bat", "clean"],
+    "use_new_terminal": false,
+    "reveal": "no_focus",
+    "hide": "on_success"
+  }
+]
