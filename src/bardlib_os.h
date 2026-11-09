@@ -20,17 +20,21 @@ uint32_t puts(char* msg);
 __attribute__((format(printf, 1, 2))) void printf(char* fmt, ...); // 1-indexed position of fmt string, and the variadic params
 
 void bard_os_init();
+void bard_create_window(uint64_t window_width, uint64_t window_height, const char* window_title);
+void bard_window_should_be_closed(); // TODO: implement
+void bard_poll_events(); // TODO: implement (:scream:)
+void bard_begin_drawing(); // TODO: implement
+void bard_end_drawing(); // TODO: implement
+void bard_close_window(); // TODO: implement
 void bard_os_exit(int64_t exitcode);
 
-void bard_create_window(uint64_t window_width, uint64_t window_height, const char* window_title);
 typedef struct Bard_Window {
     const char* title;
     uint64_t width;
     uint64_t height;
     uint32_t* pixels;
+    bool window_should_close;
 } Bard_Window;
-
-void bard_poll_events();
 
 #endif // BARDLIB_OS_H_
 
@@ -234,19 +238,6 @@ void bard_create_window(uint64_t window_width, uint64_t window_height, const cha
     ShowWindow(win32_window.window, SW_NORMAL);
 }
 
-/* void bard_poll_events() {
-    MSG msg = {0};
-
-    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-    {
-        if (msg.message == WM_QUIT) {
-            global_state.window_should_close = true;
-        }
-
-        TranslateMessage(&msg);
-        DispatchMessageA(&msg); // calls WindowProc
-    }
-} */
 #endif // _WIN32
 
 __attribute((force_align_arg_pointer, used, noreturn))

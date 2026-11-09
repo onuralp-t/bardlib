@@ -1,12 +1,6 @@
 #define BARDLIB_OS_IMPLEMENTATION
 #include "bardlib_os.h"
 
-// TODO: abstract win32 away
-struct Window_State {
-    int window_should_close;
-} global_state;
-
-
 // implement https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 bool idx_is_on_line(int64_t idx, int64_t x1, int64_t y1, int64_t x2, int64_t y2)
 {
@@ -63,7 +57,7 @@ int user_main() {
     // TODO: abstract away this thing:
     bard_create_window(800, 600, "this is a title");
 
-    while (!global_state.window_should_close)
+    while (!bard_window.window_should_close)
     {
         // TODO: abstract away event handling :scream:
         MSG msg = {0};
@@ -71,7 +65,7 @@ int user_main() {
         while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
             if (msg.message == WM_QUIT) {
-                global_state.window_should_close = true;
+                bard_window.window_should_close = true;
             }
 
             TranslateMessage(&msg);
@@ -79,14 +73,12 @@ int user_main() {
         }
 
         const uint64_t windowsize = bard_window.width * bard_window.height;
-        for (uint64_t idx = 0; idx < windowsize; ++idx)
-        {
+        for (uint64_t idx = 0; idx < windowsize; ++idx) {
             bard_window.pixels[idx] = BARD_RGB(255, 255, 255);
         }
 
         draw_line(0, 0, 799, 599, BARD_RGB(255, 0, 0));
 
-        // TODO: need begindrawing/enddrawing delimeter functions
         RedrawWindow(win32_window.window, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
     }
     return 0;
