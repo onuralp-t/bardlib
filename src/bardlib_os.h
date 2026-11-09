@@ -21,6 +21,17 @@ __attribute__((format(printf, 1, 2))) void printf(char* fmt, ...); // 1-indexed 
 
 void bard_os_init();
 void bard_os_exit(int64_t exitcode);
+
+void bard_create_window(uint64_t window_width, uint64_t window_height, const char* window_title);
+typedef struct Bard_Window {
+    const char* title;
+    uint64_t width;
+    uint64_t height;
+    uint32_t* pixels;
+} Bard_Window;
+
+void bard_poll_events();
+
 #endif // BARDLIB_OS_H_
 
 #define BARDLIB_OS_IMPLEMENTATION // TODO: reomve
@@ -52,6 +63,14 @@ typedef size_t (__cdecl *RtlCompareMemory_)(const void*, const void*, size_t);
 typedef int (__cdecl *RtlQueryPerformanceFrequency_)(uint64_t*);
 typedef int (__cdecl *RtlQueryPerformanceCounter_)(uint64_t*);
 
+typedef struct Win32_Window {
+    HINSTANCE instance;
+    WNDCLASS window_class;
+    WNDPROC window_proc;
+    HWND window;
+    BITMAPINFO bitmap_info;
+} Win32_Window;
+
 // declare/initialize globals in implementation
 RtlCopyMemory_ win32_memcpy;
 RtlMoveMemory_ win32_memmove;
@@ -62,6 +81,9 @@ RtlQueryPerformanceFrequency_ win32_hpt_frequency;
 RtlQueryPerformanceCounter_ win32_hpt_counter;
 
 HANDLE win32_stdout;
+
+Win32_Window win32_window; // TODO: assumes single window? or is this just main window? idk
+Bard_Window bard_window;
 
 void bard_os_init() {
     HMODULE ntdll_handle = GetModuleHandleW(L"ntdll.dll");
@@ -125,6 +147,106 @@ void printf(char* fmt, ...)
     stbsp_vsprintf(win32_stdout, fmt, args);
     puts(win32_stdout);
 }
+
+LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_CLOSE: [[fallthrough]]; // user attempted to close the window
+        case WM_DESTROY: // the closed window's resources are getting released, thread is quiting (sends WM_QUIT)
+        {
+            // DestroyWindow(hwnd);
+            PostQuitMessage(0);
+        } break;
+
+        case WM_PAINT: {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hwnd, &ps);
+
+            RECT clientRect;
+            GetClientRect(hwnd, &clientRect);
+            int32_t windowWidth = clientRect.right - clientRect.left;
+            int32_t windowHeight = clientRect.bottom - clientRect.top;
+
+            StretchDIBits(
+                hdc,
+                0, 0, windowWidth, windowHeight,
+                0, 0, bard_window.width, bard_window.height,
+                bard_window.pixels,
+                &win32_window.bitmap_info,
+                DIB_RGB_COLORS,
+                SRCCOPY
+            );
+
+            EndPaint(hwnd, &ps);
+            return 0;
+        } break;
+
+        default: {
+            return DefWindowProcA(hwnd, uMsg, wParam, lParam);
+        } break;
+    }
+    return 0;
+}
+
+void bard_create_window(uint64_t window_width, uint64_t window_height, const char* window_title) {
+    bard_window.title = window_title;
+    bard_window.width = window_width;
+    bard_window.height = window_height;
+
+    HINSTANCE hinstance = GetModuleHandleA(NULL);
+
+    const char* CLASS_NAME = window_title; // this doesn't determine title name
+
+    WNDCLASS wc = { 0 };
+    wc.lpfnWndProc   = WindowProc;
+    wc.hInstance     = hinstance;
+    wc.lpszClassName = CLASS_NAME;
+    wc.hCursor       = LoadCursorA(NULL, IDC_ARROW); // first param is the location of the cursor resource
+
+    win32_window.window_proc = WindowProc;
+
+    RegisterClassA(&wc);
+
+    HWND hwnd = CreateWindowExA(
+        0,
+        CLASS_NAME,
+        window_title,
+        WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+        NULL, NULL, hinstance, &bard_window
+    );
+
+    win32_window.instance = hinstance;
+    win32_window.window_class = wc;
+    win32_window.window = hwnd;
+    win32_window.window_proc = WindowProc;
+
+    bard_window.pixels = (uint32_t*)VirtualAlloc(NULL, window_width * window_height * sizeof(uint32_t), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+
+    win32_window.bitmap_info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    win32_window.bitmap_info.bmiHeader.biWidth = window_width;
+    win32_window.bitmap_info.bmiHeader.biHeight = -window_height; // neg -> making (0,0) top left
+    win32_window.bitmap_info.bmiHeader.biPlanes = 1;
+    win32_window.bitmap_info.bmiHeader.biBitCount = 32;
+    win32_window.bitmap_info.bmiHeader.biCompression = BI_RGB;
+
+    ShowWindow(win32_window.window, SW_NORMAL);
+}
+
+/* void bard_poll_events() {
+    MSG msg = {0};
+
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+    {
+        if (msg.message == WM_QUIT) {
+            global_state.window_should_close = true;
+        }
+
+        TranslateMessage(&msg);
+        DispatchMessageA(&msg); // calls WindowProc
+    }
+} */
 #endif // _WIN32
 
 __attribute((force_align_arg_pointer, used, noreturn))
