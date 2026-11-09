@@ -1,11 +1,4 @@
-#include <float.h>
-#include <limits.h>
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdalign.h>
-
-// TODO: make this headeronly library
+#define BARDLIB_OS_IMPLEMENTATION
 #include "bardlib_os.h"
 
 // TODO: abstract win32 away
