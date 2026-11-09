@@ -2,7 +2,7 @@
 if /i "%~1"=="clean" goto clean
 
 set NOCRT=-Wl,/SUBSYSTEM:console,/ENTRY:entry_point,/OPT:REF -nostdlib -ffreestanding -nostartfiles -fno-builtin
-set CFLAGS=-std=c23 -Wall -Wextra -Wpedantic -Og -g3 -lkernel32 -luser32 -lgdi32
+set CFLAGS=-std=c23 -Wall -Wextra -Wpedantic -Os -lkernel32 -luser32 -lgdi32
 
 @echo on
 clang -o main.exe src/main.c %CFLAGS% %NOCRT% || exit /b 1

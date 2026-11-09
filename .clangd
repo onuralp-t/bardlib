@@ -2,6 +2,7 @@ CompileFlags:
   Add:
     - -xc
     - -std=c23
+    - -Wno-incompatible-library-redeclaration
 Completion:
   HeaderInsertion: Never
 Diagnostics:

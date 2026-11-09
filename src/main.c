@@ -23,7 +23,7 @@ struct Window_State {
 // implement https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 bool idx_is_on_line(int64_t idx, int64_t x1, int64_t y1, int64_t x2, int64_t y2)
 {
-    if (idx >= (int64_t)(global_state.window_height * global_state.window_width)) {win32_printf("WARNING: idx_is_on_line: idx too big \n)"); return false;}
+    if (idx >= (int64_t)(global_state.window_height * global_state.window_width)) {printf("WARNING: idx_is_on_line: idx too big \n)"); return false;}
 
     int64_t idx_x = (int64_t)(idx % global_state.window_width);
     int64_t idx_y = (int64_t)(idx / global_state.window_width);
@@ -55,12 +55,12 @@ void draw_line(uint64_t x1, uint64_t y1, uint64_t x2, uint64_t y2, uint32_t colo
     uint64_t idx1 = y1 * global_state.window_width + x1;
     uint64_t idx2 = y2 * global_state.window_width + x2;
 
-    if (idx1 == idx2) {global_state.pixels[idx1] = color; win32_printf("WARNING: idx1 == idx2, coloring single pixel and exiting \n)"); return;}
+    if (idx1 == idx2) {global_state.pixels[idx1] = color; printf("WARNING: idx1 == idx2, coloring single pixel and exiting \n)"); return;}
 
     uint64_t biggeridx = idx1 > idx2 ? idx1 : idx2;
     uint64_t smalleridx = idx1 < idx2 ? idx1 : idx2;
 
-    if (biggeridx >= (global_state.window_height * global_state.window_width)) {win32_printf("WARNING: biggeridx bigger than window :( \n)"); return;}
+    if (biggeridx >= (global_state.window_height * global_state.window_width)) {printf("WARNING: biggeridx bigger than window :( \n)"); return;}
 
     for (uint64_t idx = smalleridx; idx <= biggeridx; ++idx)
     {
